@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgentHub Direct</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      :root {
+        --surface: #031427;
+        --surface-container: #102034;
+        --surface-container-high: #1b2b3f;
+        --surface-container-highest: #26364a;
+        --on-surface: #d3e4fe;
+        --outline: #45464d;
+        --success: #10b981;
+        --info: #3b82f6;
+        --warning: #f59e0b;
+        --error: #f43f5e;
+        --fatal: #9f1239;
+      }
+
+      html,
+      body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      }
+
+      .metric-glow {
+        background: radial-gradient(circle at top right, rgba(190, 198, 224, 0.16), transparent 55%);
+      }
+
+      .activity-grid {
+        background-image:
+          linear-gradient(to right, rgba(144, 144, 151, 0.16) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(144, 144, 151, 0.16) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+
+      .page-section {
+        display: none;
+      }
+
+      .page-section.active {
+        display: block;
+        animation: section-enter 240ms ease-out;
+      }
+
+      @keyframes section-enter {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div class="min-h-screen md:flex">
+      <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-slate-200 bg-slate-50 p-4 transition-transform md:translate-x-0 dark:border-slate-800 dark:bg-slate-900">
+        <div class="mb-6 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-800">
+          <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">AgentHub</p>
+          <h1 class="mt-1 text-lg font-semibold">Control Center</h1>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Operaciones agenticas de producción</p>
+        </div>
+
+        <nav class="space-y-2">
+          <button class="nav-link w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800" data-section="dashboard">Dashboard</button>
+          <button class="nav-link w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800" data-section="users">Gestión de usuarios</button>
+          <button class="nav-link w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800" data-section="agents">Gestión de agentes</button>
+          <button class="nav-link w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800" data-section="skills">Skills</button>
+          <button class="nav-link w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800" data-section="contracts">Contrataciones</button>
+          <button class="nav-link w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800" data-section="logs">Log de errores</button>
+        </nav>
+      </aside>
+
+      <div class="flex-1 md:ml-64">
+        <header class="sticky top-0 z-30 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur md:px-6 dark:border-slate-800 dark:bg-slate-900/95">
+          <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <button id="menuToggle" class="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm md:hidden dark:border-slate-700" aria-label="Abrir menú">☰</button>
+              <div>
+                <p class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Orquestación empresarial</p>
+                <h2 id="sectionTitle" class="text-lg font-semibold">Dashboard</h2>
+              </div>
+            </div>
+            <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700">
+              <span class="text-xs font-semibold uppercase tracking-[0.06em]">Modo oscuro</span>
+              <input id="themeToggle" type="checkbox" class="peer sr-only" />
+              <span class="relative h-5 w-9 rounded-full bg-slate-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-4"></span>
+            </label>
+          </div>
+        </header>
+
+        <main class="mx-auto w-full max-w-[1440px] p-4 md:p-6">
+          <section id="dashboard" class="page-section active">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <article class="metric-glow rounded-lg border border-slate-200 border-l-4 border-l-emerald-500 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-800">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Ingresos totales</p>
+                    <p class="mt-2 text-2xl font-bold">$418,200</p>
+                  </div>
+                  <span class="rounded-lg bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 17l6-6 4 4 7-8" />
+                    </svg>
+                  </span>
+                </div>
+              </article>
+
+              <article class="metric-glow rounded-lg border border-slate-200 border-l-4 border-l-rose-500 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-800">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Pérdidas por descuentos</p>
+                    <p class="mt-2 text-2xl font-bold">$27,940</p>
+                  </div>
+                  <span class="rounded-lg bg-rose-100 p-2 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v8m4-4H8" />
+                    </svg>
+                  </span>
+                </div>
+              </article>
+
+              <article class="metric-glow rounded-lg border border-slate-200 border-l-4 border-l-blue-500 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-800">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Agentes activos</p>
+                    <p class="mt-2 text-2xl font-bold">34</p>
+                  </div>
+                  <span class="rounded-lg bg-blue-100 p-2 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.75 17L4 12.75 9.75 8.5M14.25 17L20 12.75 14.25 8.5" />
+                    </svg>
+                  </span>
+                </div>
+              </article>
+
+              <article class="metric-glow rounded-lg border border-slate-200 border-l-4 border-l-amber-500 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-800">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Agentes fallando</p>
+                    <p class="mt-2 text-2xl font-bold">6</p>
+                  </div>
+                  <span class="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v4m0 4h.01M10.29 3.86l-7.5 13A2 2 0 004.5 20h15a2 2 0 001.71-3.14l-7.5-13a2 2 0 00-3.42 0z" />
+                    </svg>
+                  </span>
+                </div>
+              </article>
+            </div>
+
+            <section class="activity-grid mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-sm font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-300">Actividad semanal</h3>
+                <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">Últimos 7 días</span>
+              </div>
+              <div class="h-56 w-full rounded-lg border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-900/30">
+                <svg viewBox="0 0 900 220" class="h-full w-full" preserveAspectRatio="none">
+                  <polyline fill="none" stroke="#3b82f6" stroke-width="3" points="0,170 120,150 240,156 360,92 480,110 600,64 720,78 840,38 900,42" />
+                  <polyline fill="none" stroke="#10b981" stroke-width="3" points="0,182 120,168 240,142 360,133 480,95 600,116 720,88 840,71 900,66" />
+                </svg>
+              </div>
+            </section>
+          </section>
+
+          <section id="users" class="page-section">
+            <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-800">
+              <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <h3 class="text-lg font-semibold">Gestión de usuarios</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-slate-100/80 text-left text-xs uppercase tracking-[0.07em] text-slate-600 dark:bg-slate-900/40 dark:text-slate-300">
+                    <tr>
+                      <th class="px-4 py-3">Nombre</th>
+                      <th class="px-4 py-3">Email</th>
+                      <th class="px-4 py-3">Plan</th>
+                      <th class="px-4 py-3">Estado</th>
+                      <th class="px-4 py-3 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="agents" class="page-section">
+            <div class="space-y-4" id="agentsList"></div>
+          </section>
+
+          <section id="skills" class="page-section">
+            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-800">
+              <h3 class="text-lg font-semibold">Catálogo de skills</h3>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Una skill es una capacidad especializada que amplía el comportamiento de un agente para resolver tareas concretas de negocio (validación, extracción, análisis o automatización).
+              </p>
+              <div id="skillsGrid" class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2"></div>
+            </div>
+          </section>
+
+          <section id="contracts" class="page-section">
+            <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-800">
+              <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <h3 class="text-lg font-semibold">Contrataciones de agentes</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-slate-100/80 text-left text-xs uppercase tracking-[0.07em] text-slate-600 dark:bg-slate-900/40 dark:text-slate-300">
+                    <tr>
+                      <th class="px-4 py-3">Cliente</th>
+                      <th class="px-4 py-3">Agente</th>
+                      <th class="px-4 py-3">Skills contratadas</th>
+                      <th class="px-4 py-3">Inicio</th>
+                      <th class="px-4 py-3">Fin</th>
+                      <th class="px-4 py-3">Importe pagado</th>
+                      <th class="px-4 py-3 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="contractsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="logs" class="page-section">
+            <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-800">
+              <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <h3 class="text-lg font-semibold">Log de errores</h3>
+              </div>
+              <ul id="logsList" class="divide-y divide-slate-200 dark:divide-slate-700"></ul>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog id="recordModal" class="w-[min(720px,92vw)] rounded-xl border border-slate-300 p-0 shadow-xl backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+      <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+        <h3 id="recordModalTitle" class="text-lg font-semibold">Detalle</h3>
+        <button class="modal-close rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600">Cerrar</button>
+      </div>
+      <div class="p-4">
+        <pre id="recordModalBody" class="max-h-[60vh] overflow-auto rounded-lg bg-slate-100 p-3 text-xs dark:bg-slate-800"></pre>
+      </div>
+    </dialog>
+
+    <dialog id="promptModal" class="w-[min(760px,92vw)] rounded-xl border border-slate-300 p-0 shadow-xl backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+      <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+        <h3 class="text-lg font-semibold">Configurar agente</h3>
+        <button class="modal-close rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600">Cerrar</button>
+      </div>
+      <div class="space-y-3 p-4">
+        <p id="promptModalAgentName" class="text-sm font-medium text-slate-600 dark:text-slate-300"></p>
+        <label for="promptEditor" class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Prompt de sistema</label>
+        <textarea id="promptEditor" rows="10" class="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-800"></textarea>
+      </div>
+    </dialog>
+
+    <script>
+      const state = {
+        activeSection: "dashboard",
+      };
+
+      const users = [
+        { id: 1, nombre: "Laura Méndez", email: "laura@celio.com", plan: "Enterprise", estado: "Activo", region: "EU", renovacion: "2026-10-12" },
+        { id: 2, nombre: "Javier Rubio", email: "javier@alinea.com", plan: "Scale", estado: "Pendiente", region: "LATAM", renovacion: "2026-09-04" },
+        { id: 3, nombre: "Noa Castillo", email: "noa@eramet.com", plan: "Enterprise", estado: "Activo", region: "NA", renovacion: "2027-01-18" },
+        { id: 4, nombre: "Marta Ríos", email: "marta@xledger.io", plan: "Starter", estado: "Suspendido", region: "EU", renovacion: "2026-07-31" },
+        { id: 5, nombre: "Andrés Luque", email: "andres@opsnova.ai", plan: "Scale", estado: "Activo", region: "LATAM", renovacion: "2026-11-23" },
+      ];
+
+      const agents = [
+        {
+          id: "agt-12",
+          nombre: "Sales Copilot",
+          propietario: "Ana Flores",
+          estado: "Activo",
+          skills: ["Lead Scoring", "CRM Sync", "Email Composer"],
+          prompt: "Eres un agente de ventas B2B. Prioriza cuentas con alto potencial de cierre y redacta respuestas claras orientadas a próximos pasos comerciales.",
+        },
+        {
+          id: "agt-27",
+          nombre: "HR Screening",
+          propietario: "Luis Peña",
+          estado: "Atención",
+          skills: ["CV Parsing", "Bias Guard", "Interview Planner"],
+          prompt: "Evalúa perfiles de forma objetiva, detecta brechas de skills y sugiere rutas de entrevista estandarizadas por rol.",
+        },
+        {
+          id: "agt-31",
+          nombre: "Finance Audit",
+          propietario: "Rosa Vega",
+          estado: "Activo",
+          skills: ["Ledger Reconciliation", "Anomaly Detection", "Risk Notes"],
+          prompt: "Analiza asientos contables, detecta desviaciones de control interno y reporta hallazgos con trazabilidad de origen.",
+        },
+        {
+          id: "agt-45",
+          nombre: "Legal Reviewer",
+          propietario: "Diego Sanz",
+          estado: "Fallando",
+          skills: ["Clause Extraction", "GDPR Compliance", "Obligation Tracker"],
+          prompt: "Revisa contratos y destaca cláusulas de riesgo regulatorio. No inventes legislación y solicita revisión humana cuando corresponda.",
+        },
+      ];
+
+      const skills = [
+        { id: "sk-1", nombre: "Anomaly Detection", descripcion: "Detecta variaciones inesperadas en series temporales y costos de inferencia.", agentesHabilitados: 7 },
+        { id: "sk-2", nombre: "GDPR Compliance", descripcion: "Aplica reglas de minimización y alertas de datos sensibles en flujos europeos.", agentesHabilitados: 5 },
+        { id: "sk-3", nombre: "Workflow Router", descripcion: "Enruta tareas entre MuleRun, n8n y Make según SLA y criticidad.", agentesHabilitados: 9 },
+        { id: "sk-4", nombre: "Trace Explainer", descripcion: "Convierte trazas técnicas en resúmenes ejecutivos auditables.", agentesHabilitados: 6 },
+      ];
+
+      const contracts = [
+        {
+          id: "ct-100",
+          cliente: "Celio",
+          agente: "Sales Copilot",
+          skillsContratadas: ["Lead Scoring", "CRM Sync"],
+          inicio: "2026-01-10",
+          fin: "2026-12-31",
+          importe: "$96,000",
+          detalleSkills: [
+            { nombre: "Lead Scoring", precio: "$34,000" },
+            { nombre: "CRM Sync", precio: "$22,000" },
+            { nombre: "Soporte premium", precio: "$40,000" },
+          ],
+        },
+        {
+          id: "ct-101",
+          cliente: "Alinea",
+          agente: "HR Screening",
+          skillsContratadas: ["CV Parsing", "Interview Planner"],
+          inicio: "2026-02-01",
+          fin: "2027-01-31",
+          importe: "$74,500",
+          detalleSkills: [
+            { nombre: "CV Parsing", precio: "$25,000" },
+            { nombre: "Interview Planner", precio: "$19,500" },
+            { nombre: "Bias Guard", precio: "$30,000" },
+          ],
+        },
+        {
+          id: "ct-102",
+          cliente: "Eramet",
+          agente: "Finance Audit",
+          skillsContratadas: ["Ledger Reconciliation", "Risk Notes"],
+          inicio: "2026-03-15",
+          fin: "2026-12-15",
+          importe: "$128,000",
+          detalleSkills: [
+            { nombre: "Ledger Reconciliation", precio: "$54,000" },
+            { nombre: "Risk Notes", precio: "$34,000" },
+            { nombre: "Anomaly Detection", precio: "$40,000" },
+          ],
+        },
+        {
+          id: "ct-103",
+          cliente: "North Ledger",
+          agente: "Legal Reviewer",
+          skillsContratadas: ["Clause Extraction", "GDPR Compliance"],
+          inicio: "2026-04-05",
+          fin: "2026-11-30",
+          importe: "$88,300",
+          detalleSkills: [
+            { nombre: "Clause Extraction", precio: "$31,300" },
+            { nombre: "GDPR Compliance", precio: "$27,000" },
+            { nombre: "Obligation Tracker", precio: "$30,000" },
+          ],
+        },
+      ];
+
+      const logs = [
+        {
+          id: "lg-01",
+          timestamp: "2026-07-10 08:41:06",
+          agente: "Legal Reviewer",
+          tipo: "Emergency",
+          descripcion: "Fallo de política crítica al validar cláusulas de privacidad.",
+        },
+        {
+          id: "lg-02",
+          timestamp: "2026-07-10 08:44:58",
+          agente: "Finance Audit",
+          tipo: "Alert",
+          descripcion: "Timeout recurrente en reconciliación de mayor general.",
+        },
+        {
+          id: "lg-03",
+          timestamp: "2026-07-10 08:52:17",
+          agente: "Sales Copilot",
+          tipo: "Critical",
+          descripcion: "Error de conexión con CRM externo en producción.",
+        },
+        {
+          id: "lg-04",
+          timestamp: "2026-07-10 09:05:44",
+          agente: "HR Screening",
+          tipo: "Error",
+          descripcion: "Esquema inválido en payload de candidatos importados.",
+        },
+        {
+          id: "lg-05",
+          timestamp: "2026-07-10 09:16:08",
+          agente: "Finance Audit",
+          tipo: "Warning",
+          descripcion: "Latencia elevada en inferencia de riesgo contable.",
+        },
+        {
+          id: "lg-06",
+          timestamp: "2026-07-10 09:21:55",
+          agente: "Sales Copilot",
+          tipo: "Notice",
+          descripcion: "Pico anómalo de reintentos en envío de propuestas.",
+        },
+      ];
+
+      const statusBadgeClass = {
+        Activo: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+        Pendiente: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+        Suspendido: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+        Atención: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+        Fallando: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+      };
+
+      const logBadgeClass = {
+        Emergency: "bg-rose-700 text-white",
+        Alert: "bg-rose-600 text-white",
+        Critical: "bg-rose-500 text-white",
+        Error: "bg-orange-500 text-white",
+        Warning: "bg-amber-400 text-slate-900",
+        Notice: "bg-sky-400 text-slate-900",
+        Informational: "bg-slate-600 text-white",
+        Debug: "bg-slate-300 text-slate-900",
+      };
+
+      const usersBody = document.getElementById("usersBody");
+      const agentsList = document.getElementById("agentsList");
+      const skillsGrid = document.getElementById("skillsGrid");
+      const contractsBody = document.getElementById("contractsBody");
+      const logsList = document.getElementById("logsList");
+
+      function renderUsers() {
+        usersBody.innerHTML = users
+          .map(
+            (user) => `
+          <tr class="border-t border-slate-200 hover:bg-slate-100/60 dark:border-slate-700 dark:hover:bg-slate-700/30">
+            <td class="px-4 py-3 font-medium">${user.nombre}</td>
+            <td class="px-4 py-3">${user.email}</td>
+            <td class="px-4 py-3">${user.plan}</td>
+            <td class="px-4 py-3">
+              <span class="rounded-full px-2 py-1 text-xs font-semibold uppercase tracking-[0.06em] ${statusBadgeClass[user.estado]}">${user.estado}</span>
+            </td>
+            <td class="relative px-4 py-3 text-right">
+              ${dropdownButton(`user-${user.id}`)}
+              ${dropdownMenu(`user-${user.id}`, [
+                { action: "view-user", label: "Ver detalle", id: user.id },
+                { action: "delete", label: "Eliminar", id: user.id },
+              ])}
+            </td>
+          </tr>
+        `
+          )
+          .join("");
+      }
+
+      function renderAgents() {
+        agentsList.innerHTML = agents
+          .map(
+            (agent) => `
+          <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-800">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 class="text-lg font-semibold">${agent.nombre}</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Propietario: ${agent.propietario}</p>
+                <span class="mt-2 inline-block rounded-full px-2 py-1 text-xs font-semibold uppercase tracking-[0.06em] ${statusBadgeClass[agent.estado]}">${agent.estado}</span>
+              </div>
+              <div class="relative">
+                ${dropdownButton(`agent-${agent.id}`)}
+                ${dropdownMenu(`agent-${agent.id}`, [
+                  { action: "configure-agent", label: "Configurar", id: agent.id },
+                  { action: "delete", label: "Eliminar", id: agent.id },
+                ])}
+              </div>
+            </div>
+
+            <div class="mt-4 rounded-lg border border-slate-200 dark:border-slate-700">
+              <button class="skills-toggle flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium" data-target="skills-${agent.id}" aria-expanded="false">
+                Skills habilitadas
+                <span class="chevron transition-transform">⌄</span>
+              </button>
+              <div id="skills-${agent.id}" class="max-h-0 overflow-hidden px-3 transition-all duration-300 ease-out">
+                <ul class="pb-3 pt-1 text-sm text-slate-700 dark:text-slate-200">
+                  ${agent.skills.map((skill) => `<li class="py-1">• ${skill}</li>`).join("")}
+                </ul>
+              </div>
+            </div>
+          </article>
+        `
+          )
+          .join("");
+      }
+
+      function renderSkills() {
+        skillsGrid.innerHTML = skills
+          .map(
+            (skill) => `
+          <article class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h4 class="font-semibold">${skill.nombre}</h4>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">${skill.descripcion}</p>
+                <p class="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">${skill.agentesHabilitados} agentes habilitados</p>
+              </div>
+              <div class="relative">
+                ${dropdownButton(`skill-${skill.id}`)}
+                ${dropdownMenu(`skill-${skill.id}`, [
+                  { action: "view-skill", label: "Ver detalle", id: skill.id },
+                  { action: "delete", label: "Eliminar", id: skill.id },
+                ])}
+              </div>
+            </div>
+          </article>
+        `
+          )
+          .join("");
+      }
+
+      function renderContracts() {
+        contractsBody.innerHTML = contracts
+          .map(
+            (contract) => `
+          <tr class="border-t border-slate-200 hover:bg-slate-100/60 dark:border-slate-700 dark:hover:bg-slate-700/30">
+            <td class="px-4 py-3 font-medium">${contract.cliente}</td>
+            <td class="px-4 py-3">${contract.agente}</td>
+            <td class="px-4 py-3">${contract.skillsContratadas.join(", ")}</td>
+            <td class="px-4 py-3">${contract.inicio}</td>
+            <td class="px-4 py-3">${contract.fin}</td>
+            <td class="px-4 py-3 font-semibold">${contract.importe}</td>
+            <td class="relative px-4 py-3 text-right">
+              ${dropdownButton(`contract-${contract.id}`)}
+              ${dropdownMenu(`contract-${contract.id}`, [
+                { action: "view-contract", label: "Ver detalle", id: contract.id },
+                { action: "delete", label: "Eliminar", id: contract.id },
+              ])}
+            </td>
+          </tr>
+        `
+          )
+          .join("");
+      }
+
+      function renderLogs() {
+        logsList.innerHTML = logs
+          .map(
+            (log) => `
+          <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-slate-100/60 dark:hover:bg-slate-700/20">
+            <div class="space-y-1">
+              <p class="text-xs text-slate-500 dark:text-slate-400">${log.timestamp}</p>
+              <p class="text-sm font-semibold">${log.agente}</p>
+              <p class="text-sm text-slate-600 dark:text-slate-300">${log.descripcion}</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="rounded-full px-2 py-1 text-xs font-semibold uppercase tracking-[0.06em] ${logBadgeClass[log.tipo]}">${log.tipo}</span>
+              <div class="relative">
+                ${dropdownButton(`log-${log.id}`)}
+                ${dropdownMenu(`log-${log.id}`, [
+                  { action: "view-log", label: "Ver detalle", id: log.id },
+                  { action: "resolve-log", label: "Marcar como resuelto", id: log.id },
+                ])}
+              </div>
+            </div>
+          </li>
+        `
+          )
+          .join("");
+      }
+
+      function dropdownButton(id) {
+        return `
+          <button class="dropdown-toggle rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-700" data-dropdown-toggle="${id}" aria-label="Acciones">
+            ⋮
+          </button>
+        `;
+      }
+
+      function dropdownMenu(id, actions) {
+        return `
+          <div id="${id}" class="dropdown-menu absolute right-0 z-20 mt-2 hidden w-44 rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            ${actions
+              .map(
+                (item) => `
+                <button class="dropdown-action block w-full rounded px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800" data-action="${item.action}" data-id="${item.id}">
+                  ${item.label}
+                </button>
+              `
+              )
+              .join("")}
+          </div>
+        `;
+      }
+
+      function closeAllDropdowns() {
+        document.querySelectorAll(".dropdown-menu").forEach((menu) => menu.classList.add("hidden"));
+      }
+
+      function toggleDropdown(targetId) {
+        const menu = document.getElementById(targetId);
+        if (!menu) return;
+        const wasHidden = menu.classList.contains("hidden");
+        closeAllDropdowns();
+        if (wasHidden) {
+          menu.classList.remove("hidden");
+        }
+      }
+
+      function openRecordModal(title, record) {
+        const modal = document.getElementById("recordModal");
+        document.getElementById("recordModalTitle").textContent = title;
+        document.getElementById("recordModalBody").textContent = JSON.stringify(record, null, 2);
+        modal.showModal();
+      }
+
+      function openPromptModal(agent) {
+        const modal = document.getElementById("promptModal");
+        document.getElementById("promptModalAgentName").textContent = `Agente: ${agent.nombre} (${agent.id})`;
+        document.getElementById("promptEditor").value = agent.prompt;
+        modal.showModal();
+      }
+
+      function setupModalClosing() {
+        document.querySelectorAll("dialog").forEach((dialog) => {
+          dialog.addEventListener("click", (event) => {
+            const rect = dialog.getBoundingClientRect();
+            const clickedInDialog =
+              event.clientX >= rect.left &&
+              event.clientX <= rect.right &&
+              event.clientY >= rect.top &&
+              event.clientY <= rect.bottom;
+            if (!clickedInDialog) {
+              dialog.close();
+            }
+          });
+        });
+
+        document.querySelectorAll(".modal-close").forEach((button) => {
+          button.addEventListener("click", () => {
+            const dialog = button.closest("dialog");
+            if (dialog) dialog.close();
+          });
+        });
+      }
+
+      function setActiveSection(sectionId) {
+        state.activeSection = sectionId;
+        document.querySelectorAll(".page-section").forEach((section) => {
+          section.classList.toggle("active", section.id === sectionId);
+        });
+
+        document.querySelectorAll(".nav-link").forEach((button) => {
+          const selected = button.dataset.section === sectionId;
+          button.classList.toggle("bg-slate-100", selected);
+          button.classList.toggle("dark:bg-slate-800", selected);
+          button.classList.toggle("border-slate-200", selected);
+          button.classList.toggle("dark:border-slate-700", selected);
+        });
+
+        const selectedNav = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
+        document.getElementById("sectionTitle").textContent = selectedNav ? selectedNav.textContent : "Dashboard";
+      }
+
+      function setupTheme() {
+        const themeToggle = document.getElementById("themeToggle");
+        const savedTheme = localStorage.getItem("agenthub-theme") || "dark";
+        const root = document.documentElement;
+
+        if (savedTheme === "dark") {
+          root.classList.add("dark");
+          themeToggle.checked = true;
+        } else {
+          root.classList.remove("dark");
+          themeToggle.checked = false;
+        }
+
+        themeToggle.addEventListener("change", () => {
+          const isDark = themeToggle.checked;
+          root.classList.toggle("dark", isDark);
+          localStorage.setItem("agenthub-theme", isDark ? "dark" : "light");
+        });
+      }
+
+      function setupSkillsExpanders() {
+        document.querySelectorAll(".skills-toggle").forEach((toggle) => {
+          toggle.addEventListener("click", () => {
+            const target = document.getElementById(toggle.dataset.target);
+            if (!target) return;
+
+            const expanded = toggle.getAttribute("aria-expanded") === "true";
+            const chevron = toggle.querySelector(".chevron");
+
+            if (expanded) {
+              target.style.maxHeight = "0px";
+              toggle.setAttribute("aria-expanded", "false");
+              if (chevron) chevron.style.transform = "rotate(0deg)";
+            } else {
+              target.style.maxHeight = `${target.scrollHeight}px`;
+              toggle.setAttribute("aria-expanded", "true");
+              if (chevron) chevron.style.transform = "rotate(180deg)";
+            }
+          });
+        });
+      }
+
+      function setupEventDelegation() {
+        document.addEventListener("click", (event) => {
+          const toggleButton = event.target.closest(".dropdown-toggle");
+          if (toggleButton) {
+            event.stopPropagation();
+            toggleDropdown(toggleButton.dataset.dropdownToggle);
+            return;
+          }
+
+          const actionButton = event.target.closest(".dropdown-action");
+          if (actionButton) {
+            const action = actionButton.dataset.action;
+            const id = actionButton.dataset.id;
+            handleAction(action, id);
+            closeAllDropdowns();
+            return;
+          }
+
+          if (!event.target.closest(".dropdown-menu")) {
+            closeAllDropdowns();
+          }
+        });
+      }
+
+      function handleAction(action, id) {
+        if (action === "view-user") {
+          const user = users.find((u) => String(u.id) === String(id));
+          if (user) openRecordModal("Detalle de usuario", user);
+          return;
+        }
+
+        if (action === "configure-agent") {
+          const agent = agents.find((a) => a.id === id);
+          if (agent) openPromptModal(agent);
+          return;
+        }
+
+        if (action === "view-skill") {
+          const skill = skills.find((s) => s.id === id);
+          if (skill) openRecordModal("Detalle de skill", skill);
+          return;
+        }
+
+        if (action === "view-contract") {
+          const contract = contracts.find((c) => c.id === id);
+          if (!contract) return;
+          openRecordModal("Detalle de contrato", {
+            ...contract,
+            skillsDesglosadas: contract.detalleSkills,
+          });
+          return;
+        }
+
+        if (action === "view-log") {
+          const log = logs.find((entry) => entry.id === id);
+          if (log) openRecordModal("Detalle de error", log);
+          return;
+        }
+
+        if (action === "resolve-log") {
+          const log = logs.find((entry) => entry.id === id);
+          if (log) {
+            openRecordModal("Error marcado como resuelto", {
+              ...log,
+              estado: "Resuelto",
+              resueltoEn: new Date().toISOString(),
+            });
+          }
+          return;
+        }
+
+        if (action === "delete") {
+          openRecordModal("Acción registrada", {
+            id,
+            resultado: "Solicitud de eliminación registrada (demo hardcodeada)",
+          });
+        }
+      }
+
+      function setupNavigation() {
+        document.querySelectorAll(".nav-link").forEach((button) => {
+          button.addEventListener("click", () => {
+            setActiveSection(button.dataset.section);
+            if (window.innerWidth < 768) {
+              document.getElementById("sidebar").classList.add("-translate-x-full");
+            }
+          });
+        });
+
+        document.getElementById("menuToggle").addEventListener("click", () => {
+          document.getElementById("sidebar").classList.toggle("-translate-x-full");
+        });
+      }
+
+      function init() {
+        renderUsers();
+        renderAgents();
+        renderSkills();
+        renderContracts();
+        renderLogs();
+
+        setupNavigation();
+        setupTheme();
+        setupSkillsExpanders();
+        setupEventDelegation();
+        setupModalClosing();
+        setActiveSection("dashboard");
+      }
+
+      init();
+    </script>
+  </body>
+</html>
